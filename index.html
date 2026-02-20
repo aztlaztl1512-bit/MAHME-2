@@ -19,7 +19,9 @@
         .header { text-align: center; border-bottom: 2px solid #eee; margin-bottom: 25px; padding-bottom: 15px; }
         
         .timer-container { position: sticky; top: 10px; background: var(--wrong); color: white; padding: 10px 25px; border-radius: 50px; font-weight: bold; font-size: 1.1rem; display: inline-block; margin-bottom: 20px; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
-        
+        .timer-pulse { animation: pulse-animation 0.6s infinite alternate; transform: scale(1.1); }
+        @keyframes pulse-animation { from { transform: scale(1.1); } to { transform: scale(1.25); } }
+
         .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
         .option { padding: 18px; border: 2px solid #f0f0f0; border-radius: 15px; cursor: pointer; transition: 0.3s; font-weight: bold; background: #fafafa; font-size: 1.1rem; text-align: center; }
         .option:hover { border-color: var(--primary); background: #f0f4ff; transform: translateY(-2px); }
@@ -48,15 +50,15 @@
     </div>
 
     <div id="start-page" style="text-align: center;">
-        <p style="font-size: 1.2rem; margin-bottom: 20px;">⏱️ 45 ثانية لكل سؤال | 📊 ملخص مراجعة ختامي | 💡 تحليل منطقي موسع</p>
-        <input type="text" id="studentNameInput" placeholder="أدخل اسمك الثلاثي" style="width: 75%; padding: 15px; border-radius: 10px; border: 2px solid #ccc; text-align: center; font-size: 1.1rem; margin-bottom: 20px;">
+        <p style="font-size: 1.2rem; margin-bottom: 20px;">⏱️ 45 ثانية لكل سؤال | 🔀 خلط عشوائي كامل | 💡 تحليل منطقي موسع</p>
+        <input type="text" id="studentNameInput" placeholder="أدخل اسمك الثلاثي لبدء التحدي..." style="width: 75%; padding: 15px; border-radius: 10px; border: 2px solid #ccc; text-align: center; font-size: 1.1rem; margin-bottom: 20px;">
         <br><button class="btn" onclick="startQuizAction()">ابدأ الاختبار 🚀</button>
     </div>
 
     <div id="quiz-page" class="hidden">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
             <div id="progress-text" style="font-weight: bold; color: var(--primary);"></div>
-            <div class="timer-container">⏳ المتبقي: <span id="timer-val">45</span> ثانية</div>
+            <div id="timer-box" class="timer-container">⏳ المتبقي: <span id="timer-val">45</span> ثانية</div>
         </div>
         <div id="question-display" style="font-size: 1.8rem; text-align: center; margin: 25px 0; font-weight: 800; color: var(--primary); background: #f9f9f9; padding: 25px; border-radius: 20px; border: 1px solid #eee;"></div>
         <div id="options-container" class="options-grid"></div>
@@ -85,25 +87,24 @@
         </table>
         <div style="text-align: center; margin-top: 40px;">
             <p style="font-weight: bold; color: var(--primary);">✨ أ / عبد العزيز الفيفي - ثانوية الأمير عبدالمجيد 🎓</p>
-            <button class="btn" onclick="location.reload()">إعادة الاختبار</button>
+            <button class="btn" onclick="location.reload()">إعادة الاختبار 🔀</button>
         </div>
     </div>
 </div>
 
 <script>
-    // حماية الحقوق الفكرية الصارمة
+    // حماية الحقوق الفكرية
     (function protect() {
-        const teacher = "أ / عبد العزيز الفيفي";
-        const school = "ثانوية الأمير عبدالمجيد";
+        const teacher = "عبد العزيز الفيفي";
         setInterval(() => {
             const auth = document.getElementById('author-name');
-            if (!auth || !auth.innerText.includes("عبد العزيز الفيفي") || !auth.innerText.includes("الأمير عبدالمجيد")) {
+            if (!auth || !auth.innerText.includes(teacher)) {
                 document.getElementById('main-body').innerHTML = '<div class="locked"><h1>⚠️ خرق حماية الملكية</h1><p>هذا العمل محمي برمجياً للأستاذ عبدالعزيز الفيفي. لا يسمح بتعديل الحقوق.</p></div>';
             }
-        }, 2000);
+        }, 3000);
     })();
 
-    const questionsPool = [
+    const masterPool = [
         { q: "عين : دموع", opts: ["سحاب : مطر", "نار : حطب", "شمس : حرارة", "كتاب : ورق"], c: "سحاب : مطر", r: "العلاقة (مصدرية/نزول): الدموع تنزل من العين، والمطر ينزل من السحاب." },
         { q: "رمل : زجاج", opts: ["قصب : سكر", "حديد : حداد", "خشب : غابة", "ماء : ثلج"], c: "قصب : سكر", r: "العلاقة (أصل الشيء): الرمل هو المادة الخام للزجاج، والقصب هو المادة الخام للسكر." },
         { q: "ليل : ظلام", opts: ["نار : حرق", "ثلج : برودة", "نور : ضياء", "شمس : إشراق"], c: "ثلج : برودة", r: "العلاقة (صفة ملازمة): الظلام يلازم الليل، والبرودة تلازم الثلج." },
@@ -126,11 +127,20 @@
         { q: "غزال : رشا", opts: ["أسد : شبل", "فرس : مهر", "كلب : جرو", "جمل : قعود"], c: "فرس : مهر", r: "العلاقة (كائن وصغيره): الرشا صغير الغزال، والمهر صغير الفرس. ✨ أ / عبد العزيز الفيفي 🎓" }
     ];
 
-    let currentIdx = 0, score = 0, timerInterval, timeLeft = 45, logs = [];
+    let currentIdx = 0, score = 0, timerInterval, timeLeft = 45, logs = [], activeQs = [], sName = "";
+
+    function shuffle(arr) {
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
 
     function startQuizAction() {
-        const name = document.getElementById('studentNameInput').value;
-        if (!name.trim() || name.length < 3) { alert("يرجى إدخال اسمك الثلاثي"); return; }
+        sName = document.getElementById('studentNameInput').value;
+        if (!sName.trim() || sName.length < 3) { alert("يرجى إدخال اسمك الثلاثي"); return; }
+        activeQs = shuffle([...masterPool]); // خلط الأسئلة
         document.getElementById('start-page').classList.add('hidden');
         document.getElementById('quiz-page').classList.remove('hidden');
         loadQuestion();
@@ -139,25 +149,29 @@
     function startTimer() {
         clearInterval(timerInterval);
         timeLeft = 45;
-        document.getElementById('timer-val').innerText = timeLeft;
+        const tBox = document.getElementById('timer-box');
+        const tVal = document.getElementById('timer-val');
+        tBox.classList.remove('timer-pulse');
+        tVal.innerText = timeLeft;
         timerInterval = setInterval(() => {
             timeLeft--;
-            document.getElementById('timer-val').innerText = timeLeft;
+            tVal.innerText = timeLeft;
+            if (timeLeft <= 5) tBox.classList.add('timer-pulse');
             if (timeLeft <= 0) { clearInterval(timerInterval); handleSelection(null); }
         }, 1000);
     }
 
     function loadQuestion() {
-        if (currentIdx >= questionsPool.length) { endQuiz(); return; }
-        const q = questionsPool[currentIdx];
-        document.getElementById('progress-text').innerText = `سؤال ${currentIdx + 1} من ${questionsPool.length}`;
+        if (currentIdx >= activeQs.length) { endQuiz(); return; }
+        const q = activeQs[currentIdx];
+        document.getElementById('progress-text').innerText = `سؤال ${currentIdx + 1} من ${activeQs.length}`;
         document.getElementById('question-display').innerText = q.q;
         document.getElementById('feedback-display').style.display = 'none';
         document.getElementById('next-btn').classList.add('hidden');
         
         const box = document.getElementById('options-container');
         box.innerHTML = '';
-        [...q.opts].forEach(opt => {
+        shuffle([...q.opts]).forEach(opt => { // خلط الخيارات
             const div = document.createElement('div');
             div.className = 'option';
             div.innerText = opt;
@@ -169,7 +183,8 @@
 
     function handleSelection(sel, el) {
         clearInterval(timerInterval);
-        const q = questionsPool[currentIdx];
+        document.getElementById('timer-box').classList.remove('timer-pulse');
+        const q = activeQs[currentIdx];
         const opts = document.querySelectorAll('.option');
         opts.forEach(o => o.onclick = null);
 
@@ -197,9 +212,8 @@
     function endQuiz() {
         document.getElementById('quiz-page').classList.add('hidden');
         document.getElementById('result-page').classList.remove('hidden');
-        const name = document.getElementById('studentNameInput').value;
-        document.getElementById('score-display').innerText = `نتيجتك: ${score} من ${questionsPool.length}`;
-        document.getElementById('student-greeting').innerText = `انتهى الاختبار يا بطل: ${name}`;
+        document.getElementById('score-display').innerText = `نتيجتك: ${score} من ${activeQs.length}`;
+        document.getElementById('student-greeting').innerText = `انتهى الاختبار يا بطل: ${sName}`;
         const tbody = document.getElementById('summary-body');
         logs.forEach(log => {
             tbody.innerHTML += `<tr><td>${log.q}</td><td style="color:${log.user === log.correct ? 'green':'red'}">${log.user}</td><td style="color:green; font-weight:bold">${log.correct}</td><td style="text-align:right">${log.r}</td></tr>`;
